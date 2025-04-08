@@ -13,10 +13,84 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="헤더 파일\OverLappedManager">
+      <UniqueIdentifier>{974d7237-87e9-4a96-b7b0-e38c022d62bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\Network">
+      <UniqueIdentifier>{5c117071-c2d9-4af2-9041-306f1d2d52a9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\InGameUserManager">
+      <UniqueIdentifier>{02730f8f-646c-4971-90e8-4cf3bc2da633}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\RedisManager">
+      <UniqueIdentifier>{8939dcc2-387a-4313-a147-ea4fe1948055}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\Network\ChannelManager">
+      <UniqueIdentifier>{ea920193-ad1c-454d-9d3a-0063c2c3d3b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="헤더 파일\Network\ConnUsersManager">
+      <UniqueIdentifier>{735c1d92-721f-48f5-b9be-82c1528b54f8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="OverLappedManager.cpp">
+      <Filter>헤더 파일\OverLappedManager</Filter>
+    </ClCompile>
+    <ClCompile Include="ChannelServer1.cpp">
+      <Filter>헤더 파일\Network</Filter>
+    </ClCompile>
+    <ClCompile Include="InGameUserManager.cpp">
+      <Filter>헤더 파일\InGameUserManager</Filter>
+    </ClCompile>
+    <ClCompile Include="RedisManager.cpp">
+      <Filter>헤더 파일\RedisManager</Filter>
+    </ClCompile>
+    <ClCompile Include="ChannelManager.cpp">
+      <Filter>헤더 파일\Network\ChannelManager</Filter>
+    </ClCompile>
+    <ClCompile Include="ConnUsersManager.cpp">
+      <Filter>헤더 파일\Network\ConnUsersManager</Filter>
+    </ClCompile>
+    <ClCompile Include="CircularBuffer.cpp">
+      <Filter>헤더 파일\Network</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Packet.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="OverLappedManager.h">
+      <Filter>헤더 파일\OverLappedManager</Filter>
+    </ClInclude>
+    <ClInclude Include="Define.h">
+      <Filter>헤더 파일\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="ChannelServer1.h">
+      <Filter>헤더 파일\Network</Filter>
+    </ClInclude>
+    <ClInclude Include="InGameUserManager.h">
+      <Filter>헤더 파일\InGameUserManager</Filter>
+    </ClInclude>
+    <ClInclude Include="InGameUser.h">
+      <Filter>헤더 파일\InGameUserManager</Filter>
+    </ClInclude>
+    <ClInclude Include="RedisManager.h">
+      <Filter>헤더 파일\RedisManager</Filter>
+    </ClInclude>
+    <ClInclude Include="ChannelManager.h">
+      <Filter>헤더 파일\Network\ChannelManager</Filter>
+    </ClInclude>
+    <ClInclude Include="ConnUsersManager.h">
+      <Filter>헤더 파일\Network\ConnUsersManager</Filter>
+    </ClInclude>
+    <ClInclude Include="ConnUser.h">
+      <Filter>헤더 파일\Network\ConnUsersManager</Filter>
+    </ClInclude>
+    <ClInclude Include="CircularBuffer.h">
+      <Filter>헤더 파일\Network</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
