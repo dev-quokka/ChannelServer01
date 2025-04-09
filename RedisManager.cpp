@@ -2,14 +2,13 @@
 
 thread_local std::mt19937 RedisManager::gen(std::random_device{}());
 
-void RedisManager::init(const uint16_t RedisThreadCnt_, const uint16_t maxClientCount_, HANDLE sIOCPHandle_) {
+void RedisManager::init(const uint16_t RedisThreadCnt_) {
 
     // ---------- SET PACKET PROCESS ---------- 
     packetIDTable = std::unordered_map<uint16_t, RECV_PACKET_FUNCTION>();
 
     //SYSTEM
     packetIDTable[(uint16_t)CHANNEL_ID::USER_CONNECT_REQUEST] = &RedisManager::UserConnect;
-    packetIDTable[(uint16_t)CHANNEL_ID::USER_DISCONNECT_REQUEST] = &RedisManager::UserDisConnect;
 
     // USER STATUS
     packetIDTable[(UINT16)CHANNEL_ID::EXP_UP_REQUEST] = &RedisManager::ExpUp;
@@ -25,9 +24,6 @@ void RedisManager::init(const uint16_t RedisThreadCnt_, const uint16_t maxClient
     packetIDTable[(uint16_t)CHANNEL_ID::DEL_EQUIPMENT_REQUEST] = &RedisManager::DeleteEquipment;
     packetIDTable[(uint16_t)CHANNEL_ID::ENH_EQUIPMENT_REQUEST] = &RedisManager::EnhanceEquipment;
     packetIDTable[(uint16_t)CHANNEL_ID::MOV_EQUIPMENT_REQUEST] = &RedisManager::MoveEquipment;
-
-    //RAID
-    packetIDTable[(uint16_t)CHANNEL_ID::RAID_RANKING_REQUEST] = &RedisManager::GetRanking;
 
     RedisRun(RedisThreadCnt_);
     channelManager = new ChannelManager;
@@ -148,9 +144,8 @@ void RedisManager::UserDisConnect(uint16_t connObjNum_) {
     USER_DISCONNECT_REQUEST_PACKET userDisconnReqPacket;
     userDisconnReqPacket.PacketId = (uint16_t)CHANNEL_ID::USER_DISCONNECT_REQUEST;
     userDisconnReqPacket.PacketLength = sizeof(USER_DISCONNECT_REQUEST_PACKET);
-    userDisconnReqPacket.userPk = tempUser->GetPk();
+
     connUsersManager->FindUser(centerServerObjNum)-> PushSendMsg(sizeof(USER_DISCONNECT_REQUEST_PACKET), (char*)&userDisconnReqPacket);
-    std::cout << "User PK:" << tempUser->GetPk() << " Disconnect" << std::endl;
 }
 
 void RedisManager::MoveCenterServer(uint16_t connObjNum_, uint16_t packetSize_, char* pPacket_) {
@@ -164,7 +159,32 @@ void RedisManager::MoveCenterServer(uint16_t connObjNum_, uint16_t packetSize_, 
 
 void RedisManager::MoveChannel(uint16_t connObjNum_, uint16_t packetSize_, char* pPacket_) {
     auto expUpReqPacket = reinterpret_cast<MOVE_CHANNEL_REQUEST*>(pPacket_);
+    auto tempUser = inGameUserManager->GetInGameUserByObjNum(connObjNum_);
 
+    MOVE_CHANNEL_RESPONSE moveChRes;
+    moveChRes.PacketId = (uint16_t)CHANNEL_ID::MOVE_CHANNEL_RESPONSE;
+    moveChRes.PacketLength = sizeof(MOVE_CHANNEL_RESPONSE);
+
+    if (expUpReqPacket->channelName == "CH011") { // 유저가 요청한 채널 입장 가능 여부 체크
+        if (channelManager->InsertChannel(1, connObjNum_, tempUser)) {
+            moveChRes.isSuccess = true;
+        }
+        moveChRes.isSuccess = false;
+    }
+    else if (expUpReqPacket->channelName == "CH012") {
+        if (channelManager->InsertChannel(2, connObjNum_, tempUser)) {
+            moveChRes.isSuccess = true;
+        }
+        moveChRes.isSuccess = false;
+    }
+    else if (expUpReqPacket->channelName == "CH013") {
+        if (channelManager->InsertChannel(3, connObjNum_, tempUser)) {
+            moveChRes.isSuccess = true;
+        }
+        moveChRes.isSuccess = false;
+    }
+
+    connUsersManager->FindUser(connObjNum_)->PushSendMsg(sizeof(MOVE_CHANNEL_RESPONSE), (char*)&moveChRes);
 }
 
 //  ---------------------------- USER_STATUS  ----------------------------
@@ -203,7 +223,6 @@ void RedisManager::ExpUp(uint16_t connObjNum_, uint16_t packetSize_, char* pPack
             return;
         }
     }
-
     else { // Just Exp Up
         try {
             if (redis->hincrby(key, "exp", userExp.second)) { // Exp Up Success

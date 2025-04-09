@@ -46,6 +46,35 @@ bool ChannelServer1::init(const uint16_t MaxThreadCnt_, int port_) {
         return false;
     }
 
+    SOCKADDR_IN addr;
+    ZeroMemory(&addr, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(CENTER_SERVER_PORT);
+    inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr.s_addr);
+
+    std::cout << "Connect To Center Server" << std::endl;
+
+    connect(serverSkt, (SOCKADDR*)&addr, sizeof(addr));
+
+    std::cout << "Connect Center Server Success" << std::endl;
+
+    IM_CHANNEL_REQUEST imChReq;
+    imChReq.PacketId = (uint16_t)CHANNEL_ID::IM_CHANNEL_REQUEST;
+    imChReq.PacketLength = sizeof(IM_CHANNEL_REQUEST);
+    imChReq.channelServerNum = CHANNEL_NUM; // 각 채널 서버 번호 전달
+
+    char recvBuf[64];
+
+    send(serverSkt, (char*)&imChReq, sizeof(imChReq), 0);
+    recv(serverSkt, recvBuf, 64, 0);
+
+    auto imChRes = reinterpret_cast<IM_CHANNEL_RESPONSE*>(recvBuf);
+
+    if (!imChRes->isSuccess) {
+        std::cout << "Center Server Connection Fail" << std::endl;
+        return false;
+    }
+
     overLappedManager = new OverLappedManager;
     overLappedManager->init();
 
@@ -65,19 +94,19 @@ bool ChannelServer1::StartWork() {
         return false;
     }
 
-    connUsersManager = new ConnUsersManager(maxClientCount);
+    connUsersManager = new ConnUsersManager(MAX_USERS_OBJECT);
     inGameUserManager = new InGameUserManager;
     redisManager = new RedisManager;
 
-    for (int i = 0; i < MAX_CHANNEL1_USER_COUNT; i++) { // Make ConnUsers Queue
+    for (int i = 0; i < MAX_USERS_OBJECT; i++) { // Make ConnUsers Queue
         ConnUser* connUser = new ConnUser(MAX_CIRCLE_SIZE, i, sIOCPHandle, overLappedManager);
 
         AcceptQueue.push(connUser); // Push ConnUser
         connUsersManager->InsertUser(i, connUser); // Init ConnUsers
     }
 
-    redisManager->init(MaxThreadCnt, maxClientCount, sIOCPHandle);// Run MySQL && Run Redis Threads (The number of Clsuter Master Nodes + 1)
-    inGameUserManager->Init(maxClientCount);
+    redisManager->init(MaxThreadCnt);// Run MySQL && Run Redis Threads (The number of Clsuter Master Nodes + 1)
+    inGameUserManager->Init(MAX_USERS_OBJECT);
     redisManager->SetManager(connUsersManager, inGameUserManager);
 
     return true;
@@ -133,7 +162,6 @@ void ChannelServer1::WorkThread() {
             redisManager->Disconnect(connObjNum);
             inGameUserManager->Reset(connObjNum);
             connUser->Reset(); // Reset 
-            UserCnt.fetch_sub(1); // UserCnt -1
             AcceptQueue.push(connUser);
             continue;
         }

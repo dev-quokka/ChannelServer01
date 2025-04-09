@@ -141,6 +141,7 @@
     <ClCompile Include="RedisManager.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Channel.h" />
     <ClInclude Include="ChannelManager.h" />
     <ClInclude Include="ChannelServer1.h" />
     <ClInclude Include="CircularBuffer.h" />
