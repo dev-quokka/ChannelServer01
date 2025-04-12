@@ -23,3 +23,13 @@ bool ChannelManager::InsertChannel(uint16_t channelNum, uint16_t userObjNum_, In
 void ChannelManager::LeaveChannel(uint16_t channelNum, uint16_t userObjNum_) {
 	channels[channelNum]->RemoveUser(userObjNum_);
 }
+
+std::vector<uint16_t> ChannelManager::GetChannels() {
+	std::vector<uint16_t> k(MAX_CHANNEL,0);
+
+	for (int i = 1; i < channels.size(); i++) {
+		k[i] = channels[i]->GetUserCount();
+	}
+
+	return k;
+}
