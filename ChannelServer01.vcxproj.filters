@@ -77,9 +77,6 @@
     <ClInclude Include="RedisManager.h">
       <Filter>헤더 파일\RedisManager</Filter>
     </ClInclude>
-    <ClInclude Include="ChannelManager.h">
-      <Filter>헤더 파일\Network\ChannelManager</Filter>
-    </ClInclude>
     <ClInclude Include="ConnUsersManager.h">
       <Filter>헤더 파일\Network\ConnUsersManager</Filter>
     </ClInclude>
@@ -94,6 +91,12 @@
     </ClInclude>
     <ClInclude Include="Packet.h">
       <Filter>헤더 파일\RedisManager</Filter>
+    </ClInclude>
+    <ClInclude Include="ServerChannelEnum.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="ChannelManager.h">
+      <Filter>헤더 파일\Network\ChannelManager</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

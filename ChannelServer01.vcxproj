@@ -153,6 +153,7 @@
     <ClInclude Include="OverLappedManager.h" />
     <ClInclude Include="Packet.h" />
     <ClInclude Include="RedisManager.h" />
+    <ClInclude Include="ServerChannelEnum.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
