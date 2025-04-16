@@ -29,7 +29,6 @@ constexpr int MAX_CHANNEL1_USERS_COUNT = 30; // // Maximum number of users per c
 class ChannelServer1 {
 public:
     bool init(const uint16_t MaxThreadCnt_, int port_);
-    bool CenterConnect();
     bool StartWork();
     void ServerEnd();
 

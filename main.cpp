@@ -12,7 +12,6 @@ int main() {
     }
 
 	channelServer1.StartWork();
-    channelServer1.CenterConnect();
 
     std::cout << "=== CHANNEL SERVER 1 START ===" << std::endl;
     std::cout << "=== If You Want Exit, Write channel1 ===" << std::endl;
