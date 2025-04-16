@@ -68,12 +68,12 @@ bool ChannelServer1::CenterServerConnect() {
 
     centerObj->ConnUserRecv();
 
-    IM_CHANNEL_REQUEST imReq;
-    imReq.PacketId = (UINT16)PACKET_ID::IM_CHANNEL_REQUEST;
-    imReq.PacketLength = sizeof(IM_CHANNEL_REQUEST);
+    CHANNEL_SERVER_CONNECT_REQUEST imReq;
+    imReq.PacketId = (UINT16)PACKET_ID::CHANNEL_SERVER_CONNECT_REQUEST;
+    imReq.PacketLength = sizeof(CHANNEL_SERVER_CONNECT_REQUEST);
     imReq.channelServerNum = CHANNEL_SERVER_NUM;
 
-    centerObj->PushSendMsg(sizeof(IM_CHANNEL_REQUEST), (char*)&imReq);
+    centerObj->PushSendMsg(sizeof(CHANNEL_SERVER_CONNECT_REQUEST), (char*)&imReq);
 
     return true;
 }
@@ -155,7 +155,7 @@ void ChannelServer1::WorkThread() {
             INFINITE
         );
 
-        if (gqSucces && dwIoSize == 0 && lpOverlapped == NULL) { // Server End Request
+        if (gqSucces && dwIoSize == 0 && lpOverlapped == NULL) {
             WorkRun = false;
             continue;
         }
@@ -166,6 +166,12 @@ void ChannelServer1::WorkThread() {
 
         if (!gqSucces || (dwIoSize == 0 && overlappedEx->taskType != TaskType::ACCEPT)) { // User Disconnect
             std::cout << "socket " << connUser->GetSocket() << " Disconnected" << std::endl;
+
+            if (connObjNum == 0) { // Auto shutdown if the center server is disconnected
+                std::cout << "Center Server Disconnected" << std::endl;
+                ServerEnd();
+                exit(0);
+            }
 
             redisManager->Disconnect(connObjNum);
             inGameUserManager->Reset(connObjNum);

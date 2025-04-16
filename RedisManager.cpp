@@ -10,7 +10,7 @@ void RedisManager::init(const uint16_t RedisThreadCnt_) {
     // SYSTEM
     packetIDTable[(UINT16)PACKET_ID::USER_CONNECT_CHANNEL_REQUEST] = &RedisManager::UserConnect;
 
-    packetIDTable[(UINT16)PACKET_ID::IM_CHANNEL_RESPONSE] = &RedisManager::ImChannelRequest;
+    packetIDTable[(UINT16)PACKET_ID::CHANNEL_SERVER_CONNECT_RESPONSE] = &RedisManager::ChannelServerConnectRequest;
     packetIDTable[(UINT16)PACKET_ID::CHANNEL_USER_COUNTS_REQUEST] = &RedisManager::SendChannelUserCounts;
     packetIDTable[(UINT16)PACKET_ID::MOVE_CHANNEL_REQUEST] = &RedisManager::MoveChannel;
 
@@ -106,8 +106,8 @@ void RedisManager::PushRedisPacket(const uint16_t connObjNum_, const uint32_t si
 
 //  ---------------------------- SYSTEM  ----------------------------
 
-void RedisManager::ImChannelRequest(uint16_t connObjNum_, uint16_t packetSize_, char* pPacket_) {
-    auto centerConn = reinterpret_cast<IM_CHANNEL_RESPONSE*>(pPacket_);
+void RedisManager::ChannelServerConnectRequest(uint16_t connObjNum_, uint16_t packetSize_, char* pPacket_) {
+    auto centerConn = reinterpret_cast<CHANNEL_SERVER_CONNECT_RESPONSE*>(pPacket_);
 
     if (!centerConn->isSuccess) {
         std::cout << "Failed to Authenticate with Center Server" << std::endl;
