@@ -1,16 +1,17 @@
-#include <iostream>
 #include "ChannelServer1.h"
 
-const uint16_t PORT = 9211;
 const uint16_t maxThreadCount = 1;
+
+std::unordered_map<ServerType, ServerAddress> ServerAddressMap = { // Set server addresses
+    { ServerType::CenterServer,     { "127.0.0.1", 9090 } },
+    { ServerType::ChannelServer01, { "127.0.0.1", 9211 } },
+    { ServerType::ChannelServer02, { "127.0.0.1", 9221 } }
+};
 
 int main() {
 	ChannelServer1 channelServer1;
 
-    if (!channelServer1.init(maxThreadCount, PORT)) {
-        return 0;
-    }
-
+    channelServer1.init(maxThreadCount, ServerAddressMap[ServerType::ChannelServer01].port);
 	channelServer1.StartWork();
 
     std::cout << "=== CHANNEL SERVER 1 START ===" << std::endl;

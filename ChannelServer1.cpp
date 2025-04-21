@@ -1,5 +1,7 @@
 #include "ChannelServer1.h"
 
+// ========================== INITIALIZATION ===========================
+
 bool ChannelServer1::init(const uint16_t MaxThreadCnt_, int port_) {
     WSAData wsadata;
     MaxThreadCnt = MaxThreadCnt_; // Set the number of worker threads
@@ -48,37 +50,6 @@ bool ChannelServer1::init(const uint16_t MaxThreadCnt_, int port_) {
     return true;
 }
 
-bool ChannelServer1::CenterServerConnect() {
-    auto centerObj = connUsersManager->FindUser(0);
-
-    SOCKADDR_IN addr;
-    ZeroMemory(&addr, sizeof(addr));
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(CENTER_SERVER_PORT);
-    inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr.s_addr);
-
-    std::cout << "Connecting To Center Server" << std::endl;
-
-    if (connect(centerObj->GetSocket(), (SOCKADDR*)&addr, sizeof(addr))) {
-        std::cout << "Failed to Connect to Center Server" << std::endl;
-        return false;
-    }
-
-    std::cout << "Center Server Connected" << std::endl;
-
-    centerObj->ConnUserRecv();
-
-    CHANNEL_SERVER_CONNECT_REQUEST imReq;
-    imReq.PacketId = (UINT16)PACKET_ID::CHANNEL_SERVER_CONNECT_REQUEST;
-    imReq.PacketLength = sizeof(CHANNEL_SERVER_CONNECT_REQUEST);
-    imReq.channelServerNum = CHANNEL_SERVER_NUM;
-
-    centerObj->PushSendMsg(sizeof(CHANNEL_SERVER_CONNECT_REQUEST), (char*)&imReq);
-
-    return true;
-}
-
-
 bool ChannelServer1::StartWork() {
     if (!CreateWorkThread()) {
         return false;
@@ -107,11 +78,81 @@ bool ChannelServer1::StartWork() {
     inGameUserManager->Init(MAX_USERS_OBJECT);
     redisManager->SetManager(connUsersManager, inGameUserManager);
 
+    CenterServerConnect();
+
     return true;
 }
 
+void ChannelServer1::ServerEnd() {
+    WorkRun = false;
+    AccepterRun = false;
+
+    for (int i = 0; i < workThreads.size(); i++) {
+        PostQueuedCompletionStatus(sIOCPHandle, 0, 0, nullptr);
+    }
+
+    for (int i = 0; i < workThreads.size(); i++) { // Shutdown worker threads
+        if (workThreads[i].joinable()) {
+            workThreads[i].join();
+        }
+    }
+    for (int i = 0; i < acceptThreads.size(); i++) { // Shutdown accept threads
+        if (acceptThreads[i].joinable()) {
+            acceptThreads[i].join();
+        }
+    }
+
+    delete redisManager;
+    delete inGameUserManager;
+
+    CloseHandle(sIOCPHandle);
+    closesocket(serverSkt);
+    WSACleanup();
+
+    std::cout << "Wait 5 Seconds Before Shutdown" << std::endl;
+    std::this_thread::sleep_for(std::chrono::seconds(5)); // Wait 5 seconds before server shutdown
+    std::cout << "Game Server1 Shutdown" << std::endl;
+}
+
+
+// ======================== SERVER CONNECTION ==========================
+
+bool ChannelServer1::CenterServerConnect() {
+    auto centerObj = connUsersManager->FindUser(0);
+
+    SOCKADDR_IN addr;
+    ZeroMemory(&addr, sizeof(addr));
+    addr.sin_family = AF_INET;
+    addr.sin_port = htons(ServerAddressMap[ServerType::CenterServer].port);
+    inet_pton(AF_INET, ServerAddressMap[ServerType::CenterServer].ip.c_str(), &addr.sin_addr.s_addr);
+
+    std::cout << "Connecting To Center Server" << std::endl;
+
+    if (connect(centerObj->GetSocket(), (SOCKADDR*)&addr, sizeof(addr))) {
+        std::cout << "Failed to Connect to Center Server" << std::endl;
+        return false;
+    }
+
+    std::cout << "Center Server Connected" << std::endl;
+
+    centerObj->ConnUserRecv();
+
+    CHANNEL_SERVER_CONNECT_REQUEST imReq;
+    imReq.PacketId = (UINT16)PACKET_ID::CHANNEL_SERVER_CONNECT_REQUEST;
+    imReq.PacketLength = sizeof(CHANNEL_SERVER_CONNECT_REQUEST);
+    imReq.channelServerNum = CHANNEL_SERVER_NUM;
+
+    centerObj->PushSendMsg(sizeof(CHANNEL_SERVER_CONNECT_REQUEST), (char*)&imReq);
+
+    return true;
+}
+
+
+// ========================= THREAD MANAGEMENT =========================
+
 bool ChannelServer1::CreateWorkThread() {
     WorkRun = true;
+
     try {
         auto threadCnt = MaxThreadCnt;
         for (int i = 0; i < threadCnt; i++) {
@@ -122,11 +163,13 @@ bool ChannelServer1::CreateWorkThread() {
         std::cerr << "Failed to Create Work Threads : " << e.what() << std::endl;
         return false;
     }
+
     return true;
 }
 
 bool ChannelServer1::CreateAccepterThread() {
     AccepterRun = true;
+
     try {
         auto threadCnt = MaxThreadCnt / 4 + 1;
         for (int i = 0; i < threadCnt; i++) {
@@ -137,6 +180,7 @@ bool ChannelServer1::CreateAccepterThread() {
         std::cerr << "Failed to Create Accepter Threads : " << e.what() << std::endl;
         return false;
     }
+
     return true;
 }
 
@@ -169,8 +213,6 @@ void ChannelServer1::WorkThread() {
 
             if (connObjNum == 0) { // Auto shutdown if the center server is disconnected
                 std::cout << "Center Server Disconnected" << std::endl;
-                ServerEnd();
-                exit(0);
             }
 
             redisManager->Disconnect(connObjNum);
@@ -235,37 +277,5 @@ void ChannelServer1::AccepterThread() {
             //}
         }
     }
-}
-
-void ChannelServer1::ServerEnd() {
-    WorkRun = false;
-    AccepterRun = false;
-
-    for (int i = 0; i < workThreads.size(); i++) {
-        PostQueuedCompletionStatus(sIOCPHandle, 0, 0, nullptr);
-    }
-
-    for (int i = 0; i < workThreads.size(); i++) { // Shutdown worker threads
-        if (workThreads[i].joinable()) {
-            workThreads[i].join();
-        }
-    }
-    for (int i = 0; i < acceptThreads.size(); i++) { // Shutdown accept threads
-        if (acceptThreads[i].joinable()) {
-            acceptThreads[i].join();
-        }
-    }
-
-    ConnUser* connUser;
-
-    delete redisManager;
-    delete inGameUserManager;
-    CloseHandle(sIOCPHandle);
-    closesocket(serverSkt);
-    WSACleanup();
-
-    std::cout << "Wait 5 Seconds Before Shutdown" << std::endl;
-    std::this_thread::sleep_for(std::chrono::seconds(5)); // Wait 5 seconds before server shutdown
-    std::cout << "Game Server1 Shutdown" << std::endl;
 }
 

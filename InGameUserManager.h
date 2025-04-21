@@ -1,13 +1,6 @@
 #pragma once
 #include "InGameUser.h"
 
-#include <vector>
-#include <string>
-#include <cstdint>
-#include <ws2tcpip.h>
-#include <utility>
-#include <iostream>
-
 class InGameUserManager {
 public:
 	~InGameUserManager() {
@@ -16,7 +9,11 @@ public:
 		}
 	}
 
+	// ====================== INITIALIZATION ======================
 	void Init(uint16_t maxClientCount_);
+
+
+	// ================== INGAME USER MANAGEMENT ==================
 	InGameUser* GetInGameUserByObjNum(uint16_t connObjNum_);
 	void Set(uint16_t connObjNum_, std::string userId_, uint32_t userPk_, unsigned int userExp_, uint16_t userLevel_, unsigned int raidScore_);
 	void Reset(uint16_t connObjNum_);
